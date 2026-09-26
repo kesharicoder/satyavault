@@ -56,7 +56,10 @@ cd frontend
 npm install
 npm run dev
 ```
-Web app available at: `http://localhost:3000`
+Web app available at: [`http://localhost:3000`] 
+
+
+Prototype Link: https://satyavault.onrender.com 
 
 ### 3. Verify System Tests
 ```bash
