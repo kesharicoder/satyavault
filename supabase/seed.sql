@@ -1,6 +1,15 @@
--- Synthetic Seed Data for Satya Vault Prototype
+-- Seed Auth Users to satisfy foreign key constraint on public.profiles(id) -> auth.users(id)
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values
+  ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'aarav.mehta@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Inspector Aarav Mehta","user_code":"INV-001"}', now(), now()),
+  ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'rahul.verma@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Officer Rahul Verma","user_code":"CUST-002"}', now(), now()),
+  ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'neha.sharma@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Dr. Neha Sharma","user_code":"FOR-003"}', now(), now()),
+  ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'priya.nair@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Adv. Priya Nair","user_code":"PROS-004"}', now(), now()),
+  ('55555555-5555-5555-5555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'court.officer@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Justice S. K. Roy","user_code":"CRT-005"}', now(), now()),
+  ('66666666-6666-6666-6666-666666666666', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'amitav.ghosh@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Amitav Ghosh","user_code":"AUD-006"}', now(), now()),
+  ('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@satyavault.local', '$2a$10$abcdefghijklmnopqrstuu', now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Chief Administrator","user_code":"ADM-007"}', now(), now())
+on conflict (id) do nothing;
 
--- Note: User UUIDs correlate to synthetic auth identities created in development setup
 insert into public.profiles (id, user_code, full_name, department, designation, phone)
 values
   ('11111111-1111-1111-1111-111111111111', 'INV-001', 'Inspector Aarav Mehta', 'Cyber Crime Division', 'Senior Investigator', '+919876543210'),
