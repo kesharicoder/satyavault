@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { Timeline } from '@/components/ui/Timeline';
 import { Clock } from 'lucide-react';
 
 export default function CaseTimelinePage() {
