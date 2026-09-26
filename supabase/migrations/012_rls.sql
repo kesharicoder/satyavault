@@ -25,7 +25,21 @@ as $$
     select 1
     from public.user_roles
     where user_id::text = auth.uid()::text
-      and role = required_role
+      and role::text = required_role::text
+  );
+$$;
+
+create or replace function public.current_user_has_role(required_role text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.user_roles
+    where user_id::text = auth.uid()::text
+      and role::text = required_role
   );
 $$;
 
@@ -41,14 +55,38 @@ as $$
     or exists (
       select 1
       from public.case_assignments ca
-      where ca.case_id = target_case_id
+      where ca.case_id::text = target_case_id::text
         and ca.user_id::text = auth.uid()::text
         and ca.revoked_at is null
     )
     or exists (
       select 1
       from public.cases c
-      where c.id = target_case_id
+      where c.id::text = target_case_id::text
+        and c.created_by::text = auth.uid()::text
+    );
+$$;
+
+create or replace function public.can_access_case(target_case_id text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    public.current_user_has_role('administrator')
+    or public.current_user_has_role('security_auditor')
+    or exists (
+      select 1
+      from public.case_assignments ca
+      where ca.case_id::text = target_case_id
+        and ca.user_id::text = auth.uid()::text
+        and ca.revoked_at is null
+    )
+    or exists (
+      select 1
+      from public.cases c
+      where c.id::text = target_case_id
         and c.created_by::text = auth.uid()::text
     );
 $$;
@@ -116,7 +154,7 @@ with check (
 drop policy if exists "users can view version details" on public.document_versions;
 create policy "users can view version details"
 on public.document_versions for select to authenticated
-using (exists (select 1 from public.documents d where d.id = document_id and public.can_access_case(d.case_id)));
+using (exists (select 1 from public.documents d where d.id::text = document_id::text and public.can_access_case(d.case_id)));
 
 -- Evidence Policies
 drop policy if exists "users can view case evidence" on public.evidence;
@@ -141,7 +179,7 @@ with check (
 drop policy if exists "users can view custody events" on public.custody_events;
 create policy "users can view custody events"
 on public.custody_events for select to authenticated
-using (exists (select 1 from public.evidence e where e.id = evidence_id and public.can_access_case(e.case_id)));
+using (exists (select 1 from public.evidence e where e.id::text = evidence_id::text and public.can_access_case(e.case_id)));
 
 drop policy if exists "authorized roles can initiate custody events" on public.custody_events;
 create policy "authorized roles can initiate custody events"
