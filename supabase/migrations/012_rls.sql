@@ -24,7 +24,7 @@ as $$
   select exists (
     select 1
     from public.user_roles
-    where user_id = auth.uid()::uuid
+    where user_id::text = auth.uid()::text
       and role = required_role
   );
 $$;
@@ -42,58 +42,67 @@ as $$
       select 1
       from public.case_assignments ca
       where ca.case_id = target_case_id
-        and ca.user_id = auth.uid()::uuid
+        and ca.user_id::text = auth.uid()::text
         and ca.revoked_at is null
     )
     or exists (
       select 1
       from public.cases c
       where c.id = target_case_id
-        and c.created_by = auth.uid()::uuid
+        and c.created_by::text = auth.uid()::text
     );
 $$;
 
--- Profiles & User Roles Policies (Manage Users / Roles: Administrator Only)
+-- Profiles Policies
+drop policy if exists "users can view their own profile or elevated roles view all" on public.profiles;
 create policy "users can view their own profile or elevated roles view all"
 on public.profiles for select to authenticated
-using (id = auth.uid()::uuid or public.current_user_has_role('administrator') or public.current_user_has_role('security_auditor'));
+using (id::text = auth.uid()::text or public.current_user_has_role('administrator') or public.current_user_has_role('security_auditor'));
 
+drop policy if exists "users can update their own profile or admin can manage" on public.profiles;
 create policy "users can update their own profile or admin can manage"
 on public.profiles for update to authenticated
-using (id = auth.uid()::uuid or public.current_user_has_role('administrator'));
+using (id::text = auth.uid()::text or public.current_user_has_role('administrator'));
 
+-- User Roles Policies
+drop policy if exists "only administrators can manage user roles" on public.user_roles;
 create policy "only administrators can manage user roles"
 on public.user_roles for all to authenticated
 using (public.current_user_has_role('administrator'))
 with check (public.current_user_has_role('administrator'));
 
--- Cases Policies (Create Case: Investigator or Administrator Only)
+-- Cases Policies
+drop policy if exists "authorized users can view assigned cases" on public.cases;
 create policy "authorized users can view assigned cases"
 on public.cases for select to authenticated
 using (public.can_access_case(id));
 
+drop policy if exists "only investigators and administrators can create cases" on public.cases;
 create policy "only investigators and administrators can create cases"
 on public.cases for insert to authenticated
 with check (
-  created_by = auth.uid()::uuid 
+  created_by::text = auth.uid()::text 
   and (public.current_user_has_role('investigator') or public.current_user_has_role('administrator'))
 );
 
+drop policy if exists "case owners and administrators can update cases" on public.cases;
 create policy "case owners and administrators can update cases"
 on public.cases for update to authenticated
-using (created_by = auth.uid()::uuid or public.current_user_has_role('administrator'))
-with check (created_by = auth.uid()::uuid or public.current_user_has_role('administrator'));
+using (created_by::text = auth.uid()::text or public.current_user_has_role('administrator'))
+with check (created_by::text = auth.uid()::text or public.current_user_has_role('administrator'));
 
--- Documents Policies (Upload Document: Investigator, Custody Off, Forensic Off, Prosecutor, Admin)
+-- Documents Policies
+drop policy if exists "users can view case documents" on public.documents;
 create policy "users can view case documents"
 on public.documents for select to authenticated
 using (public.can_access_case(case_id));
 
+drop policy if exists "authorized roles can insert case documents" on public.documents;
 create policy "authorized roles can insert case documents"
 on public.documents for insert to authenticated
 with check (
   public.can_access_case(case_id) 
-  and created_by = auth.uid()::uuid
+  and created_by::text = auth.uid()::text
   and (
     public.current_user_has_role('investigator')
     or public.current_user_has_role('custody_officer')
@@ -104,15 +113,18 @@ with check (
 );
 
 -- Document Versions Policies
+drop policy if exists "users can view version details" on public.document_versions;
 create policy "users can view version details"
 on public.document_versions for select to authenticated
 using (exists (select 1 from public.documents d where d.id = document_id and public.can_access_case(d.case_id)));
 
--- Evidence Policies (Register Evidence: Investigator, Custody Off, Forensic Off, Admin Only)
+-- Evidence Policies
+drop policy if exists "users can view case evidence" on public.evidence;
 create policy "users can view case evidence"
 on public.evidence for select to authenticated
 using (public.can_access_case(case_id));
 
+drop policy if exists "authorized roles can register evidence" on public.evidence;
 create policy "authorized roles can register evidence"
 on public.evidence for insert to authenticated
 with check (
@@ -125,11 +137,13 @@ with check (
   )
 );
 
--- Custody Policies (Initiate & Complete Transfers: Authorized Roles Only)
+-- Custody Policies
+drop policy if exists "users can view custody events" on public.custody_events;
 create policy "users can view custody events"
 on public.custody_events for select to authenticated
 using (exists (select 1 from public.evidence e where e.id = evidence_id and public.can_access_case(e.case_id)));
 
+drop policy if exists "authorized roles can initiate custody events" on public.custody_events;
 create policy "authorized roles can initiate custody events"
 on public.custody_events for insert to authenticated
 with check (
@@ -139,6 +153,7 @@ with check (
   or public.current_user_has_role('administrator')
 );
 
+drop policy if exists "custody and forensic officers can complete transfers" on public.custody_events;
 create policy "custody and forensic officers can complete transfers"
 on public.custody_events for update to authenticated
 using (
@@ -152,13 +167,15 @@ with check (
   or public.current_user_has_role('administrator')
 );
 
--- Audit Policies (View Audit Logs: Security Auditor and Administrator Only)
+-- Audit Policies
+drop policy if exists "auditors and administrators can view audit events" on public.audit_events;
 create policy "auditors and administrators can view audit events"
 on public.audit_events for select to authenticated
 using (public.current_user_has_role('security_auditor') or public.current_user_has_role('administrator'));
 
+drop policy if exists "authenticated users can create audit events" on public.audit_events;
 create policy "authenticated users can create audit events"
 on public.audit_events for insert to authenticated
-with check (actor_id = auth.uid()::uuid);
+with check (actor_id::text = auth.uid()::text);
 
 revoke update, delete on public.audit_events from authenticated;

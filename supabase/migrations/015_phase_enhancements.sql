@@ -49,6 +49,7 @@ ALTER TABLE public.case_entities ENABLE ROW LEVEL SECURITY;
 -- -----------------------------------------------------------------------------
 
 -- Users can view case entities if they have access to the primary case or matched case
+DROP POLICY IF EXISTS "authorized users can view case entities" ON public.case_entities;
 CREATE POLICY "authorized users can view case entities"
 ON public.case_entities FOR SELECT TO authenticated
 USING (
@@ -58,6 +59,7 @@ USING (
 );
 
 -- Authorized investigators & forensic officers can insert extracted entities
+DROP POLICY IF EXISTS "investigators and forensic officers can insert entities" ON public.case_entities;
 CREATE POLICY "investigators and forensic officers can insert entities"
 ON public.case_entities FOR INSERT TO authenticated
 WITH CHECK (
@@ -70,6 +72,7 @@ WITH CHECK (
 );
 
 -- Two-Person Rule Custody Transfer update policy
+DROP POLICY IF EXISTS "custody officers can update custody transfer signatures" ON public.custody_events;
 CREATE POLICY "custody officers can update custody transfer signatures"
 ON public.custody_events FOR UPDATE TO authenticated
 USING (
