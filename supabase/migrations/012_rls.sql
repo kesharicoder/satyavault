@@ -24,7 +24,7 @@ as $$
   select exists (
     select 1
     from public.user_roles
-    where user_id = auth.uid()
+    where user_id = auth.uid()::uuid
       and role = required_role
   );
 $$;
@@ -42,25 +42,25 @@ as $$
       select 1
       from public.case_assignments ca
       where ca.case_id = target_case_id
-        and ca.user_id = auth.uid()
+        and ca.user_id = auth.uid()::uuid
         and ca.revoked_at is null
     )
     or exists (
       select 1
       from public.cases c
       where c.id = target_case_id
-        and c.created_by = auth.uid()
+        and c.created_by = auth.uid()::uuid
     );
 $$;
 
 -- Profiles & User Roles Policies (Manage Users / Roles: Administrator Only)
 create policy "users can view their own profile or elevated roles view all"
 on public.profiles for select to authenticated
-using (id = auth.uid() or public.current_user_has_role('administrator') or public.current_user_has_role('security_auditor'));
+using (id = auth.uid()::uuid or public.current_user_has_role('administrator') or public.current_user_has_role('security_auditor'));
 
 create policy "users can update their own profile or admin can manage"
 on public.profiles for update to authenticated
-using (id = auth.uid() or public.current_user_has_role('administrator'));
+using (id = auth.uid()::uuid or public.current_user_has_role('administrator'));
 
 create policy "only administrators can manage user roles"
 on public.user_roles for all to authenticated
@@ -75,14 +75,14 @@ using (public.can_access_case(id));
 create policy "only investigators and administrators can create cases"
 on public.cases for insert to authenticated
 with check (
-  created_by = auth.uid() 
+  created_by = auth.uid()::uuid 
   and (public.current_user_has_role('investigator') or public.current_user_has_role('administrator'))
 );
 
 create policy "case owners and administrators can update cases"
 on public.cases for update to authenticated
-using (created_by = auth.uid() or public.current_user_has_role('administrator'))
-with check (created_by = auth.uid() or public.current_user_has_role('administrator'));
+using (created_by = auth.uid()::uuid or public.current_user_has_role('administrator'))
+with check (created_by = auth.uid()::uuid or public.current_user_has_role('administrator'));
 
 -- Documents Policies (Upload Document: Investigator, Custody Off, Forensic Off, Prosecutor, Admin)
 create policy "users can view case documents"
@@ -93,7 +93,7 @@ create policy "authorized roles can insert case documents"
 on public.documents for insert to authenticated
 with check (
   public.can_access_case(case_id) 
-  and created_by = auth.uid()
+  and created_by = auth.uid()::uuid
   and (
     public.current_user_has_role('investigator')
     or public.current_user_has_role('custody_officer')
@@ -159,6 +159,6 @@ using (public.current_user_has_role('security_auditor') or public.current_user_h
 
 create policy "authenticated users can create audit events"
 on public.audit_events for insert to authenticated
-with check (actor_id = auth.uid());
+with check (actor_id = auth.uid()::uuid);
 
 revoke update, delete on public.audit_events from authenticated;
