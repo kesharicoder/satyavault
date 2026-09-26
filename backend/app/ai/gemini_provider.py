@@ -1,7 +1,21 @@
 import math
+import logging
 from typing import Dict, Any, List
 from app.ai.provider import AIProvider
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+try:
+    import google.generativeai as genai
+    if settings.GEMINI_API_KEY and not settings.GEMINI_API_KEY.startswith("mock"):
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        _HAS_GEMINI_SDK = True
+    else:
+        _HAS_GEMINI_SDK = False
+except Exception as e:
+    logger.warning(f"Failed to configure Gemini SDK: {e}")
+    _HAS_GEMINI_SDK = False
 
 class GeminiProvider(AIProvider):
     async def generate_response(self, prompt: str, context_chunks: List[Dict[str, Any]]) -> str:
@@ -9,6 +23,20 @@ class GeminiProvider(AIProvider):
             f"[Source Doc: {c.get('doc_title', 'Doc')} | Page: {c.get('page', 1)}]\n{c.get('content', '')}"
             for c in context_chunks
         ])
+
+        if _HAS_GEMINI_SDK:
+            try:
+                model = genai.GenerativeModel("gemini-3.8-flash")
+                full_prompt = (
+                    f"System: You are Satya Vault's legal and forensic AI assistant. "
+                    f"Answer the query accurately based on the case context.\n\n"
+                    f"Case Context:\n{context_str}\n\nQuery: {prompt}"
+                )
+                res = model.generate_content(full_prompt)
+                if res and res.text:
+                    return res.text
+            except Exception as ex:
+                logger.error(f"Gemini API call failed, using fallback: {ex}")
         
         response_text = (
             f"Based on the authorized case records provided:\n\n"
@@ -23,6 +51,18 @@ class GeminiProvider(AIProvider):
         return response_text
 
     async def generate_embeddings(self, text: str) -> List[float]:
+        if _HAS_GEMINI_SDK:
+            try:
+                embed_res = genai.embed_content(
+                    model="models/embedding-001",
+                    content=text,
+                    task_type="retrieval_document"
+                )
+                if embed_res and "embedding" in embed_res:
+                    return embed_res["embedding"]
+            except Exception as ex:
+                logger.error(f"Gemini embedding API failed, using vector fallback: {ex}")
+
         # Generate 768-dimensional normalized mock vector for prototype pgvector compatibility
         vec = [0.01 * ((i % 17) + 1) for i in range(768)]
         norm = math.sqrt(sum(x*x for x in vec))

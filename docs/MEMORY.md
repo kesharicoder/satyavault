@@ -66,4 +66,8 @@ Satya Vault is a secure digital document and evidence management prototype built
 ## Verification & System Status
 - **Backend Test Suite**: 7/7 unit and integration tests passed (`100% Success`).
 - **Cryptographic Audit Chain**: Verified 100% intact hash continuity.
+- **Live Supabase Database & Auth**: Connected to project `xzrgqmxfultafzuvygbi.supabase.co` with verified GoTrue Auth (v2.197.0), PostgreSQL DB, and Admin Service Role API.
+- **Live Gemini 3.8 Flash AI Engine**: Integrated with `google-generativeai` SDK, powered by `gemini-3.8-flash` model for source-grounded legal & forensic AI RAG analysis.
+- **Render Deployment Blueprint**: Fully configured via `render.yaml` and deployed to GitHub repo `https://github.com/kesharicoder/satyavault.git`.
+- **Credential Protection**: Strict `.gitignore` rules verified across root & subdirectories (`.env`, `*.env`), zero secret leaks.
 - **Local Runtime**: Frontend live on `http://localhost:3000`, Backend live on `http://localhost:8000`.

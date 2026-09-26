@@ -77,22 +77,20 @@ function LoginContent() {
           <button
             type="button"
             onClick={() => setActiveTab('signin')}
-            className={`flex-1 pb-3 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${
-              activeTab === 'signin'
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${activeTab === 'signin'
                 ? 'border-saffron text-navy font-bold'
                 : 'border-transparent text-muted hover:text-navy'
-            }`}
+              }`}
           >
             <LogIn className="w-4 h-4 text-saffron" /> Sign In (Officer Access)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('signup')}
-            className={`flex-1 pb-3 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${
-              activeTab === 'signup'
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${activeTab === 'signup'
                 ? 'border-saffron text-navy font-bold'
                 : 'border-transparent text-muted hover:text-navy'
-            }`}
+              }`}
           >
             <UserPlus className="w-4 h-4 text-saffron" /> Sign Up / Register Persona
           </button>
@@ -170,7 +168,7 @@ function LoginContent() {
             <div className="pt-4 border-t border-border space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase text-navy flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-govblue" /> Localhost Portal Quick Access Cards
+                  <UserCheck className="w-4 h-4 text-govblue" /> Demo Portal Quick Access
                 </h3>
                 <span className="text-[10px] text-muted font-mono">1-Click Portal Authentication</span>
               </div>
